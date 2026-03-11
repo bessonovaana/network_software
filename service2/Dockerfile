@@ -2,7 +2,6 @@ FROM ubuntu:22.04
 
 COPY requirements.txt .
 
-USER appuser
 
 RUN apt-get update && apt-get install -y \
     gcc \
@@ -22,8 +21,7 @@ WORKDIR /app
 
 
 COPY . .
+USER appuser
 
-
-EXPOSE 8000
 
 CMD ["python3", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

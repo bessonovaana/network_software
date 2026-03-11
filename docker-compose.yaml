@@ -1,8 +1,46 @@
+version: "3.9"
+
 services:
-  app:
-    build: .
-    image: test
-    container_name: myapp
+  service1:
+    build:
+      context: ./service1
+      dockerfile: Dockerfile
+    container_name: service1
     ports:
-      - "8080:8000"
-    restart: unless-stopped
+      - "8101:8000"
+    networks:
+      backend:
+        aliases:
+          - service1
+
+  service2:
+    build:
+      context: ./service2
+      dockerfile: Dockerfile
+    container_name: service2
+    ports:
+      - "8102:8000"
+    networks:
+      backend:
+        aliases:
+          - service2
+
+  nginx:
+    image: nginx:1.25
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - service1
+      - service2
+    networks:
+      backend:
+        aliases:
+          - nginx
+
+networks:
+  backend:
+    driver: bridge
+    name: backend
