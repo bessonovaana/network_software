@@ -21,3 +21,19 @@ The generation command usually looks like this:
 ```bash
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. proto/service.proto
 ```
+
+## gRPC vs REST
+
+Starting REST benchmark...
+
+REST: 1.1095 sec
+
+Starting gRPC benchmark...
+
+gRPC: 0.1773 sec
+
+**Conclusion**
+
+In this test, gRPC showed better performance than REST.  
+The difference is due to the more compact serialization format (Protobuf instead of JSON) and the lower protocol overhead of gRPC over HTTP/2.  
+However, for real-world use it is also important to consider development complexity, frontend compatibility, and logging/monitoring infrastructure, which are usually simpler with REST services.
