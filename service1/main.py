@@ -35,7 +35,7 @@ async def root():
      return "This is sevise1"
 @app.get("/health")
 async def health_check():
-        return {"status": "healthy", "service": "orders-svc-s04"}
+        return {"status": "healthy"}
 
 @app.post("/orders", status_code=status.HTTP_201_CREATED, response_model=Order)
 async def create_order(order: OrderCreate):
