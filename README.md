@@ -33,6 +33,21 @@ And gets exactly what it asked for — not a byte more. That shifts control over
 
 **Underfetching:** to render a profile, the client needs 3 requests: for the user, their friends, and recent photos. In GraphQL, this can be one request.
 
+## Client for graphQL
+
+Endpoint: There is always just one, usually `/graphql`.  
+Method: Always `POST` (rarely `GET`, when CDN caching is needed).  
+Body: JSON in this form:
+
+```json
+{
+  "query": "query($id: ID!) { user(id: $id) { name } }",
+  "variables": { "id": 1 }
+}
+```
+
+Variables: Never interpolate values directly into the query string with f-strings. That is dangerous because it can lead to injections, and it is inefficient because the server cannot cache the parsed query. Use `$variable` in the query and pass values separately in a dictionary.
+
 ## Implementation
 
 ```
@@ -41,4 +56,6 @@ servise2/
 |- main.py (code)
 |
 |- schema.graphql (scheme of GraphQL)
+|
+|- client.py (requests)
 ````
