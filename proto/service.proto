@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+// Опишите ваш пакет и сервис здесь
+
+package users.v1;
+
+service UsersService {
+  rpc Users(query) returns (query);
+  rpc CreateUser(mutation) returns (mutation);
+}
+
+message query {
+  string users = 1;
+  string email = 2;
+}
+
+message mutation {
+  string createUser = 1;
+  string email = 2;
+}
