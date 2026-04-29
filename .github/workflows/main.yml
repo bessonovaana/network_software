@@ -41,7 +41,7 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker service/build \
+        cd service1 && docker build \
           --file Dockerfile \
           --tag "$IMAGE_NAME:$IMAGE_TAG" \
           --tag "$IMAGE_NAME:latest" \
