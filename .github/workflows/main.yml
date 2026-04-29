@@ -57,6 +57,5 @@ jobs:
           --file service1/Dockerfile \
           --tag "$IMAGE_NAME:$IMAGE_TAG" \
           --tag "$IMAGE_NAME:latest" \
-          --target final \
           --load \
           service1
