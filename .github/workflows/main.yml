@@ -47,14 +47,16 @@ jobs:
           ${{ runner.os }}-buildx-
 
     - name: Build Docker image (with cache)
-      uses: docker/build-push-action@v5
-      with:
-        context: service1
-        file: service1/Dockerfile
-        target: final                     # если есть многоступенчатый Dockerfile
-        load: true                        # оставить образ в Docker‑демоне раннера
-        cache-from: type=local,src=/tmp/.buildx-cache
-        cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
-        tags: |
-          $IMAGE_NAME:$IMAGE_TAG
-          $IMAGE_NAME:latest
+      env:
+        IMAGE_NAME: tickets-s04
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker buildx build \
+          --cache-from type=local,src=/tmp/.buildx-cache \
+          --cache-to type=local,dest=/tmp/.buildx-cache,mode=max \
+          --file service1/Dockerfile \
+          --tag "$IMAGE_NAME:$IMAGE_TAG" \
+          --tag "$IMAGE_NAME:latest" \
+          --target final \
+          --load \
+          service1
