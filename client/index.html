@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>tickets-s04</title>
+    <style> body { font-family: Arial; margin: 20px; } input[type="text"] { width: 350px; padding: 10px; } button { padding: 10px 20px; margin-left: 5px; } textarea { width: 500px; height: 200px; margin-top: 10px; } #status { margin: 10px 0; font-weight: bold; } </style>
+</head>
+<body>
+    <h1>WebRTC P2P Чат</h1>
+    <div>
+        <label>Роль: </label>
+        <select id="role">
+            <option value="initiator">Инициатор (offer)</option>
+            <option value="waiter">Ожидающий (answer)</option>
+        </select>
+        <button onclick="connect()">Подключиться</button>
+    </div>
+    <div id="status">Выберите роль и подключитесь</div>
+    <input type="text" id="message" placeholder="Введите сообщение" disabled>
+    <button onclick="sendMessage()" disabled>Отправить</button>
+    <br><h2>Чат:</h2>
+    <textarea id="chat" readonly></textarea>
+
+    <script>
+        let pc; let dc; let ws; let isInitiator;
+        const signalingServer = 'ws://localhost:8765';
+        const iceServers = { iceServers: [{urls:'stun:stun.l.google.com:19302'}] };
+        let makingOffer = false;
+
+        function connect() {
+            const role = document.getElementById('role').value;
+            isInitiator = role === 'initiator';
+            document.getElementById('status').textContent = `Роль: ${role}. Подключение...`;
+            ws = new WebSocket(signalingServer);
+            ws.onopen = () => {
+                document.getElementById('status').textContent = 'Signaling OK';
+                pc = new RTCPeerConnection(iceServers);
+                setupPC();
+                if (isInitiator) createOffer();
+            };
+            ws.onmessage = handleSignalingMessage;
+        }
+
+        function setupPC() {
+            pc.onicecandidate = e => e.candidate && sendSignal(pc.localDescription ? pc.localDescription : e.candidate);
+            pc.onconnectionstatechange = () => {
+                const status = document.getElementById('status');
+                status.textContent = `Connection: ${pc.connectionState}`;
+                if (pc.connectionState === 'connected') {
+                    document.querySelector('input').disabled = false;
+                    document.querySelector('button[onclick="sendMessage()"]').disabled = false;
+                }
+            };
+            pc.ondatachannel = e => { dc = e.channel; setupDC(); };
+        }
+
+        function createOffer() {
+            makingOffer = true;
+            dc = pc.createDataChannel('chat');
+            setupDC();
+            pc.createOffer().then(offer => pc.setLocalDescription(offer))
+                .then(() => sendSignal(pc.localDescription))
+                .catch(e => console.error(e));
+        }
+
+        function handleSignalingMessage(event) {
+            const signal = JSON.parse(event.data);
+            if (signal.candidate) {
+                pc.addIceCandidate(new RTCIceCandidate(signal)).catch(e => console.error(e));
+                return;
+            }
+            const readyForOffer = !makingOffer && pc.signalingState === 'stable';
+            const offerCollision = signal.type === 'offer' && !readyForOffer;
+            if (offerCollision) return;  // Игнорируем чужой offer
+
+            pc.setRemoteDescription(new RTCSessionDescription(signal))
+                .then(() => {
+                    if (signal.type === 'offer') {
+                        pc.createAnswer().then(answer => pc.setLocalDescription(answer))
+                            .then(() => sendSignal(pc.localDescription));
+                    }
+                })
+                .catch(e => console.error(e))
+                .finally(() => makingOffer = false);
+        }
+
+        function setupDC() {
+            dc.onopen = () => document.getElementById('status').textContent += ' | DC открыт';
+            dc.onmessage = e => addToChat('>> ' + e.data);
+            dc.onclose = () => document.getElementById('status').textContent += ' | DC закрыт';
+        }
+
+        function sendSignal(signal) {
+            if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(signal));
+        }
+
+        function sendMessage() {
+            const msg = document.getElementById('message').value.trim();
+            if (msg && dc.readyState === 'open') {
+                dc.send(msg);
+                addToChat('Я: ' + msg);
+                document.getElementById('message').value = '';
+            }
+        }
+
+        function addToChat(msg) {
+            document.getElementById('chat').value += `${new Date().toLocaleTimeString()} ${msg}\n`;
+            document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+        }
+    </script>
+</body>
+</html>
