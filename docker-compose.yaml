@@ -40,6 +40,17 @@ services:
         aliases:
           - nginx
 
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      backend:
+        aliases:
+          - redis
+    command: redis-server --appendonly yes
+
 networks:
   backend:
     driver: bridge
