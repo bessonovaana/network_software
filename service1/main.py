@@ -40,7 +40,7 @@ async def health_check():
 @app.post("/orders", status_code=status.HTTP_201_CREATED, response_model=Order)
 async def create_order(order: OrderCreate):
         global current_id, db
-        logger.info(f"Received order data: {order.dict()}")
+        logger.info(f"Received_order data: {order.dict()}")
         
         new_order = Order(
             id=current_id,
