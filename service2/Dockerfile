@@ -1,27 +1,13 @@
-FROM ubuntu:22.04
-
+FROM python:3.11-slim AS builder
+WORKDIR /install
 COPY requirements.txt .
+RUN pip install --prefix=/install -r requirements.txt
 
+FROM python:3.11-slim
+WORKDIR /
+COPY --from=builder /install /usr/local
+COPY main.py /
+COPY proto/ /proto/
 
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    build-essential \
-    python3 \
-    python3-pip \
-    python3-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip3 install --no-cache-dir --upgrade pip setuptools wheel \
-    && addgroup --system --gid 1000 appuser \
-    && adduser --system --uid 1000 --gid 1000 appuser \
-    && pip3 install --no-cache-dir -r requirements.txt
-
-WORKDIR /app
-
-
-
-COPY . .
-USER appuser
-
-
-CMD ["python3", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 50051
+CMD ["python", "main.py"]

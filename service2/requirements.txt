@@ -3,3 +3,11 @@ uvicorn[standard]==0.24.0
 pydantic==2.5.0
 python-multipart==0.0.6
 
+# для gRPC‑сервера / клиента
+grpcio>=1.50.0
+
+# protobuf для генерации service_pb2.py
+protobuf>=4.0.0
+
+# если используете grpcio‑tools для генерации из .proto (внутри Docker)
+grpcio-tools>=1.50.0
